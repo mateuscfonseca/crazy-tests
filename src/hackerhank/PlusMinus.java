@@ -18,7 +18,7 @@ public class PlusMinus {
 		System.out.println(String.format("%.6f	\n%.6f	\n%.6f", 
 											positive/size, 
 												negative/size, 
-													neutral/size));
+												neutral/size));
 	}
 
 	private static final Scanner scanner = new Scanner(System.in);
