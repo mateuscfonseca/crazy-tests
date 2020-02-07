@@ -54,7 +54,7 @@ public class ArrayManipulation {
 				array[end + 1] -= queries[i][2];
 		}
 		long x = 0;
-		for (int i = 1; i < n; i++) {
+		for (int i = 1; i <= n; i++) {
 			x += array[i];
 			if (x > biggerSum)
 				biggerSum = x;
