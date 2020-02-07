@@ -1,55 +1,84 @@
 package hackerhank;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
+import java.util.stream.IntStream;
 
 public class ArrayManipulation {
-		
-	static long arrayManipulation2(int n, int[][] queries) {
-		AtomicLongArray array 	= new AtomicLongArray(new long[n]);
-		AtomicLong atomicSum 	= new AtomicLong(0l);
-		//int queriesSize 		= queries.length;
-		
-		Arrays
-			.stream(queries)
-			.parallel()
-			.forEach(operationLine -> {
-				synchronized (array) {
-					int start 	= operationLine[0];			
-					int end 	= operationLine[1];
 
-					for (int j = start - 1; j < end; j++) {
-						synchronized (atomicSum) {
-							long newValue = array.get(j) + operationLine[2];
-							array.set(j, newValue);
-							if (newValue > atomicSum.get()) atomicSum.set(newValue);
-						}						
-					}
-				}
-			});
-			
+	static long arrayManipulationParallel(int n, int[][] queries) {
+		AtomicLongArray array = new AtomicLongArray(new long[n]);
+		AtomicLong atomicSum = new AtomicLong(0l);
+
+		Arrays.stream(queries)
+		        .parallel()
+		        .forEach(operationLine ->
+		        {
+			        synchronized (array) {
+				        int start = operationLine[0];
+				        int end = operationLine[1];
+
+				        IntStream.range(start - 1, end)
+				                .parallel()
+				                .forEach(j ->
+				                {
+					                synchronized (atomicSum) {
+						                long newValue = array.get(j) + operationLine[2];
+						                array.set(j, newValue);
+						                if (newValue > atomicSum.get())
+							                atomicSum.set(newValue);
+					                }
+				                });
+			        }
+		        });
+
 		return atomicSum.get();
 	}
-	
-	static long arrayManipulation(int n, int[][] queries) {
-		long[] array = new long[n];
-		
+
+	static long arrayManipulationSemDoisLoops(int n, int[][] queries) {
+		long[] array = new long[n + 1];
+
 		long biggerSum = 0l;
 		int queriesSize = queries.length;
 
 		for (int i = 0; i < queriesSize; i++) {
 
-			int start 	= queries[i][0];
-			int end 	= queries[i][1];
+			int start = queries[i][0];
+			int end = queries[i][1];
+
+			array[start] += queries[i][2];
+			if ((end) + 1 <= n)
+				array[end + 1] -= queries[i][2];
+		}
+		long x = 0;
+		for (int i = 1; i < n; i++) {
+			x += array[i];
+			if (x > biggerSum)
+				biggerSum = x;
+		}
+		
+		return biggerSum;
+
+	}
+
+	static long arrayManipulation(int n, int[][] queries) {
+		long[] array = new long[n];
+
+		long biggerSum = 0l;
+		int queriesSize = queries.length;
+
+		for (int i = 0; i < queriesSize; i++) {
+
+			int start = queries[i][0];
+			int end = queries[i][1];
 
 			for (int j = start - 1; j < end; j++) {
 				array[j] = array[j] + queries[i][2];
-				if (array[j] > biggerSum) biggerSum = array[j];	
+				if (array[j] > biggerSum)
+					biggerSum = array[j];
 			}
 		}
 		return biggerSum;
@@ -78,8 +107,8 @@ public class ArrayManipulation {
 			}
 		}
 
-		long result = arrayManipulation(n, queries);
-		
+		long result = arrayManipulationSemDoisLoops(n, queries);
+
 		System.out.println(result);
 
 		scanner.close();
