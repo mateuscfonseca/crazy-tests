@@ -13,27 +13,53 @@ public class ArrayManipulation {
 		AtomicLongArray array = new AtomicLongArray(new long[n]);
 		AtomicLong atomicSum = new AtomicLong(0l);
 
-		Arrays.stream(queries)
-		        .parallel()
-		        .forEach(operationLine ->
-		        {
-			        synchronized (array) {
-				        int start = operationLine[0];
-				        int end = operationLine[1];
+		Arrays.stream(queries).parallel().forEach(operationLine -> {
+			synchronized (array) {
+				int start = operationLine[0];
+				int end = operationLine[1];
 
-				        IntStream.range(start - 1, end)
-				                .parallel()
-				                .forEach(j ->
-				                {
-					                synchronized (atomicSum) {
-						                long newValue = array.get(j) + operationLine[2];
-						                array.set(j, newValue);
-						                if (newValue > atomicSum.get())
-							                atomicSum.set(newValue);
-					                }
-				                });
-			        }
-		        });
+				IntStream.range(start - 1, end).parallel().forEach(j -> {
+					synchronized (atomicSum) {
+						long newValue = array.get(j) + operationLine[2];
+						array.set(j, newValue);
+						if (newValue > atomicSum.get())
+							atomicSum.set(newValue);
+					}
+				});
+			}
+		});
+
+		return atomicSum.get();
+	}
+
+	static long arrayManipulationParallelFast(int n, int[][] queries) {
+		AtomicLongArray array = new AtomicLongArray(new long[n + 1]);
+		AtomicLong atomicSum = new AtomicLong(0l);
+
+		Arrays.stream(queries).parallel().forEach(operationLine -> {
+			synchronized (array) {
+				int start = operationLine[0];
+				int end = operationLine[1];
+				long newValue = array.get(start) + operationLine[2];
+				array.set(start, newValue);
+				if ((end + 1) <= n)
+					array.getAndAdd(end + 1, -(operationLine[2]));
+
+			}
+		});
+		AtomicLong accumulator = new AtomicLong(0l);
+		IntStream.rangeClosed(0, n).parallel().forEachOrdered(i -> {
+			synchronized (accumulator) {
+				synchronized (array) {
+					accumulator.getAndAdd(array.get(i));					
+				}
+				synchronized (atomicSum) {
+					if (accumulator.get() > atomicSum.get()) {
+						atomicSum.set(accumulator.get());
+					}
+				}
+			}
+		});
 
 		return atomicSum.get();
 	}
@@ -59,7 +85,7 @@ public class ArrayManipulation {
 			if (x > biggerSum)
 				biggerSum = x;
 		}
-		
+
 		return biggerSum;
 
 	}
@@ -88,8 +114,7 @@ public class ArrayManipulation {
 
 	public static void main(String[] args) throws IOException {
 
-		String[] nm = scanner.nextLine()
-		        .split(" ");
+		String[] nm = scanner.nextLine().split(" ");
 
 		int n = Integer.parseInt(nm[0]);
 
@@ -98,8 +123,7 @@ public class ArrayManipulation {
 		int[][] queries = new int[m][3];
 
 		for (int i = 0; i < m; i++) {
-			String[] queriesRowItems = scanner.nextLine()
-			        .split(" ");
+			String[] queriesRowItems = scanner.nextLine().split(" ");
 
 			for (int j = 0; j < 3; j++) {
 				int queriesItem = Integer.parseInt(queriesRowItems[j]);
