@@ -24,14 +24,12 @@ public class DiagonalDifference {
 		public static int diagonalDifference(List<List<Integer>> arr) {
 			int dimension = arr.size();
 			int leftToRight = 0;
-			int rightToLeft = 0;
 
 			for(int i = 0; i < dimension;i++) {
-				leftToRight += arr.get(i).get(i);
-				rightToLeft += arr.get(i).get((dimension - 1) - i);
+				leftToRight += arr.get(i).get(i) - arr.get(i).get((dimension - 1) - i);
 			}
 			
-			return Math.abs(leftToRight - rightToLeft);
+			return Math.abs(leftToRight);
 		}
 
 	}
