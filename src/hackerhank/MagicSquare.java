@@ -34,6 +34,7 @@ public class MagicSquare {
 		int[] ss = s.clone();
 
 		for (int i = 0; i < s.length; i++) {
+			if(i == 4) continue;
 			if ((i % 2 == 0 && ss[i] % 2 > 0) || (i % 2 > 0 && ss[i] % 2 == 0)) {
 				ss[i] = 0;
 
@@ -51,7 +52,7 @@ public class MagicSquare {
 	}
 
 	static int sumLines(int offSet, int[] s) {
-		return s[offSet] + s[offSet + 1] + s[offSet + 1];
+		return s[offSet] + s[offSet + 1] + s[offSet + 2];
 	}
 
 	static int biggerIndex(int offSet, int[] s) {
@@ -113,7 +114,32 @@ public class MagicSquare {
 	}
 
 	static int[] normalizeCombination(int[] s) {
+		final int[] ss = s.clone();
+		int coll = 0;
+		int end = s.length - 1;
+		for (int i = 0; i < 7;i++) {
+			int offSet = i;
+			int sum = sumLines(offSet, ss);
+			int temp;
+			if (sum != 15 && coll < 3) {
+				temp = ss[offSet + coll];
+				ss[offSet + coll] = ss[end - (offSet + coll)];
+				ss[end - (offSet + coll)] = temp;
+				int newSum = sumLines(offSet, ss);
+				if(newSum != 15) {
+					temp = ss[end - (offSet + coll)]; 
+					ss[end - (offSet + coll)] = ss[offSet + coll];
+					ss[offSet + coll] = temp;
+				}
+				coll += 1;
+				continue;
+			} else {
+				i += 3;
+				coll = 0;
+			}
+		}
 
+		return ss;
 	} 
 
 	static int formingMagicSquare(int[][] s) {
