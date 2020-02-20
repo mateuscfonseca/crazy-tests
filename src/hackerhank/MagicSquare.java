@@ -1,9 +1,11 @@
 package hackerhank;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,11 +33,13 @@ public class MagicSquare {
 	static int[] verifyPosition(int[] s) {
 		Map<Integer, Integer> usedNumbers = new HashMap<>();
 
-		int[] ss = s.clone();
+		int[] ss = Arrays.copyOf(s, 9);
 
 		for (int i = 0; i < s.length; i++) {
-			if(i == 4) continue;
-			if ((i % 2 == 0 && ss[i] % 2 > 0) || (i % 2 > 0 && ss[i] % 2 == 0)) {
+			if (i == 4)
+				continue;
+			if ((i % 2 == 0 && ss[i] % 2 > 0) 
+					|| (i % 2 > 0 && ss[i] % 2 == 0)) {
 				ss[i] = 0;
 
 			} else if (usedNumbers.containsKey(ss[i])) {
@@ -70,14 +74,14 @@ public class MagicSquare {
 		for (int j = 0; j < 3; j++) {
 			int current = offSet + j;
 			if (s[current] < s[lower])
-			lower = current;
+				lower = current;
 		}
 		return lower;
 	}
 
 	static int[] removePlus(int[] s) {
-		final int[] ss = s.clone();
-		for (int i = 0; i < 3;i++) {
+		final int[] ss = Arrays.copyOf(s, 9);
+		for (int i = 0; i < 3; i++) {
 			int offSet = (i % 3) * 2;
 			int sum = sumLines(offSet, ss);
 			if (sum >= 15) {
@@ -97,50 +101,79 @@ public class MagicSquare {
 	}
 
 	static int[] combineReflections(int[] s) {
-		int[] ss = s.clone();
+		int[] ss = Arrays.copyOf(s, 9);
 		int end = s.length - 1;
-		for(int i = 0;i < s.length / 2;i++){
+		for (int i = 0; i < s.length / 2; i++) {
 			int a = ss[i];
 			int b = ss[end - i];
-			if(a + b != 10 && (a > 0 || b > 0)) {
-				if(a > 0)
+			if (a + b != 10 && (a > 0 || b > 0)) {
+				if (a > 0)
 					ss[end - i] = Math.abs(10 - a);
-				else if(b > 0) {
+				else if (b > 0) {
 					ss[i] = Math.abs(10 - b);
 				}
 			}
-		} 
+		}
+		return ss;
+	}
+
+	static int[] rotateOdds(int[] s, int oddIndex) {
+		int[] ss = Arrays.copyOf(s, 9);
+		int odd = ss[oddIndex];
+		int newOdd = ss[oddIndex + 2];
+		ss[oddIndex] = newOdd;
+		ss[oddIndex + 2] = odd;
+
 		return ss;
 	}
 
 	static int[] normalizeCombination(int[] s) {
-		final int[] ss = s.clone();
-		int coll = 0;
-		int end = s.length - 1;
-		for (int i = 0; i < 7;i++) {
-			int offSet = i;
-			int sum = sumLines(offSet, ss);
-			int temp;
-			if (sum != 15 && coll < 3) {
-				temp = ss[offSet + coll];
-				ss[offSet + coll] = ss[end - (offSet + coll)];
-				ss[end - (offSet + coll)] = temp;
-				int newSum = sumLines(offSet, ss);
-				if(newSum != 15) {
-					temp = ss[end - (offSet + coll)]; 
-					ss[end - (offSet + coll)] = ss[offSet + coll];
-					ss[offSet + coll] = temp;
-				}
-				coll += 1;
-				continue;
-			} else {
-				i += 3;
-				coll = 0;
-			}
+		int[] ss = Arrays.copyOf(s, 9);
+		
+		int sum = sumLines(0, ss);
+		if(sum != 15) {
+			ss = rotateOdds(ss, 1);
+			sum = sumLines(0,ss);
 		}
-
+		
+		if(sum != 15) {
+			ss = rotateOdds(ss, 1);
+		} else {
+			ss = removePlus(ss);
+			ss = combineReflections(ss);
+		}
+		
+		sum = sumLines(6, ss);
+		if(sum != 15) {
+			ss = rotateOdds(ss, 5);
+			sum = sumLines(0,ss);
+		}
+		
+		if(sum != 15) {
+			ss = rotateOdds(ss, 5);
+		} else {
+			ss = removePlus(ss);
+			ss = combineReflections(ss);
+		}		
 		return ss;
-	} 
+	}
+	
+	static int[] addRemaning(int[] s) {
+		List<Integer> ss = Arrays.stream(s).boxed().collect(Collectors.toList());
+		
+		Optional<Integer> firstMissing = IntStream
+			.range(1, 10)
+			.boxed()
+			.filter(v -> ss.contains(v) == false)
+			.limit(1)
+			.findFirst();
+		
+		if(firstMissing.isPresent()) {
+			int index = ss.indexOf(0);
+			s[index] = firstMissing.get();
+		}
+		return s;
+	}
 
 	static int formingMagicSquare(int[][] s) {
 
@@ -151,20 +184,35 @@ public class MagicSquare {
 				ss[j + i * 3] = s[i][j];
 			}
 		}
-		List<Integer> quinas = IntStream.of(2, 4, 6, 8).boxed().collect(Collectors.toList());
-		List<Integer> meios = IntStream.of(1, 3, 7, 9).boxed().collect(Collectors.toList());
-
+		
+		sss = Arrays.copyOf(ss, 9);
 		int count = Math.abs(5 - ss[4]);
-
 		ss[4] = 5;
 
 		ss = verifyPosition(ss);
 
 		ss = removePlus(ss);
 		ss = combineReflections(ss);
-
 		ss = normalizeCombination(ss);
+		
+		ss = addRemaning(ss);
+		
+		ss = removePlus(ss);
+		ss = combineReflections(ss);
+		ss = normalizeCombination(ss);
+		
+		count += countDiffs(sss, ss);
+		
+		return count;
+	}
 
+	
+
+	static int countDiffs(int[] s, int[] ss) {
+		int count = 0;
+		for(int i = 0;i < 9;i++) {
+			count += Math.abs(s[i] - ss[i]);
+		}
 		return count;
 	}
 
