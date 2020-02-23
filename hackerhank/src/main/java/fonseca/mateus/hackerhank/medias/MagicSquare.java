@@ -202,19 +202,14 @@ public class MagicSquare {
 		ss = removePlus(ss);
 		ss = combineReflections(ss);
 		ss = normalizeCombination(ss);
-		ss = addRemaning(ss);
-		
-		ss = verifyPosition(ss);		
-		ss = removePlus(ss);
-		ss = combineReflections(ss);
-		ss = normalizeCombination(ss);
+		ss = verifyPosition(ss);
+	
+		ss = addRemaning(ss);	
 		
 		count += countDiffs(sss, ss);
 		
 		return count;
 	}
-
-	
 
 
 	static int formingMagicSquare2(int[][] s) {
